@@ -2,16 +2,25 @@ package main
 
 import (
 	"log"
+	"net/http"
 
-	"github.com/atanda0x/encryptString/utils"
+	httptransport "github.com/go-kit/kit/transport/http"
+
+	"github.com/atanda0x/encryptString/helpers"
 )
 
 func main() {
-	key := "111023043350789514532147"
-	message := "I'm a programmer"
-	// log.Println("Original message ", message)
-	encryptedString := utils.EncryptString(key, message)
-	log.Println("Encrypted message: ", encryptedString)
-	decryptedString := utils.DecrptString(key, encryptedString)
-	log.Println("Decrypted message: ", decryptedString)
+	svc := helpers.EncryptServiceInstance{}
+	encryptHandler := httptransport.NewServer(helpers.MakeEncryptEndpoint(svc),
+		helpers.DecodeEncryptRequest,
+		helpers.EncodeResponse)
+
+	decryptHandler := httptransport.NewServer(helpers.MakeDecryptEndpoint(svc),
+		helpers.DecodeDecryptRequest,
+		helpers.EncodeResponse)
+
+	http.Handle("/encrypt", encryptHandler)
+	http.Handle("/decrypt", decryptHandler)
+	log.Fatal(http.ListenAndServe(":8000", nil))
+
 }
